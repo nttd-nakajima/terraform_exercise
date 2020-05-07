@@ -18,6 +18,27 @@ resource "aws_s3_bucket" "ex_s3_bucket" {
   }
 }
 
+resource "aws_s3_bucket_policy" "ex_s3_bucket_policy" {
+  bucket = aws_s3_bucket.ex_s3_bucket.id
+  policy = <<-EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "IPAllow",
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "s3:PutObject",
+        "Resource": "arn:aws:s3:::ex-bucket-nakajima/*",
+        "Condition": {
+          "IpAddress": {"aws:SourceIp": "52.69.227.18/32"}
+        }
+      }
+    ]
+  }
+  EOF
+}
+
 resource "aws_s3_bucket_public_access_block" "ex_s3_access_block" {
   bucket                  = aws_s3_bucket.ex_s3_bucket.id
   block_public_acls       = true
@@ -194,17 +215,17 @@ resource "aws_iam_role_policy" "ex_iam_policy" {
 # Cloud watch
 # ===========================
 resource "aws_cloudwatch_metric_alarm" "ex_recovery" {
-  alarm_name = "ex-recovery"
-  namespace = "AWS/EC2"
+  alarm_name         = "ex-recovery"
+  namespace          = "AWS/EC2"
   evaluation_periods = 2
-  period = 60
+  period             = 60
 
   alarm_actions = ["arn:aws:automate:ap-northeast-1:ec2:recover"]
 
-  statistic = "Minimum"
+  statistic           = "Minimum"
   comparison_operator = "GreaterThanThreshold"
-  threshold = 0.0
-  metric_name = "StatusCheckFailed_System"
+  threshold           = 0.0
+  metric_name         = "StatusCheckFailed_System"
 
   dimensions = {
     InstanceId = aws_instance.ex_t2.id
