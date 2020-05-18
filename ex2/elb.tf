@@ -1,4 +1,30 @@
 # ===========================
+# CLB
+# ===========================
+resource "aws_elb" "web" {
+  name            = "ex2-clb"
+  security_groups = [aws_security_group.alb.id]
+  subnets         = [for el in aws_subnet.public.*.id : el]
+  internal        = false
+  # availability_zones = [for el in var.availability_zones : el]
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  instances                 = [for el in aws_instance.web.*.id : el]
+  cross_zone_load_balancing = true
+
+  tags = {
+    Name = "ex2-clb"
+  }
+}
+
+
+# ===========================
 # ALB
 # ===========================
 resource "aws_alb" "web" {
